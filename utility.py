@@ -9,7 +9,7 @@ from rdkit.Chem import AllChem
 import tempfile
 import shutil
 
-MAYACHEMTOOLS_DIR = "/data2/mhassan/mayachemtools"
+MAYACHEMTOOLS_DIR = "mayachemtools"
 
 class FeatureGenerator:
     
