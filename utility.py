@@ -1,7 +1,7 @@
 # Utilitiy script for feature generation
 # Md Mahmudulla Hassan
 # The University of Texas at El Paso
-# Last Modified: 10/01/2018
+# Last Modified: 12/19/2018
 
 import os
 from rdkit import Chem
@@ -55,3 +55,9 @@ class FeatureGenerator:
        
     def _cleanup(self):
         shutil.rmtree(self.temp_dir)
+
+
+# Example: Extracting TPATF features
+#  from utility import FeatureGenerator
+#  ft = FeatureGenerator("O=C(Cc1ccccc1)Nc2ncc(s2)C3CCC3")
+#  features = ft.toTPATF()
