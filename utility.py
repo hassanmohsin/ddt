@@ -1,4 +1,4 @@
-# Utilitiy script for feature generation
+# Utility script for feature generation
 # Md Mahmudulla Hassan
 # The University of Texas at El Paso
 # Last Modified: 12/19/2018
