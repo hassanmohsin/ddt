@@ -43,7 +43,7 @@ class FeatureGenerator:
         command = "perl " + script_path + " -r " + os.path.join(self.temp_dir, "temp") + " --AtomTripletsSetSizeToUse FixedSize -v ValuesString -o " + os.path.join(self.temp_dir, "temp.sdf")
         os.system(command)
         
-        with open(os.path.join(self.temp_dir, "temp.csv"), 'r') as f:
+        with open(os.path.join(self.temp_dir, "temp.sdf"), 'r') as f:
             for line in f.readlines():
                 if "Cmpd" in line:
                     line = line.split(';')[5].replace('"','')
