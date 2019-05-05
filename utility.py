@@ -1,15 +1,51 @@
 # Utility script for feature generation
 # Md Mahmudulla Hassan
 # The University of Texas at El Paso
-# Last Modified: 12/19/2018
+# Last Modified: 05/05/2019
 
 import os
 from rdkit import Chem
 from rdkit.Chem import AllChem
 import tempfile
 import shutil
+import subprocess
+import errno
+from rdkit.Chem import Draw
+from rdkit.Chem.Draw import DrawingOptions
+import base64
+import cairosvg
 
-MAYACHEMTOOLS_DIR = "mayachemtools"
+MAYACHEMTOOLS_DIR = os.path.abspath("mayachemtools")
+
+class SmilesToImage:
+    def __init__(self, smiles):
+        self.smiles = smiles
+        self.temp_dir = tempfile.mkdtemp()
+        self.png_file = os.path.join(self.temp_dir, "mol.png")
+        self.svg_file = os.path.join(self.temp_dir, "mol.svg")
+
+    def toPNG(self):
+        # Set the drawing options
+        DrawingOptions.atomLabelFontSize = 55
+        DrawingOptions.dotsPerAngstrom = 100
+        DrawingOptions.bondLineWidth = 3.0
+        
+        # Conver the SMILES into a mol object
+        m = Chem.MolFromSmiles(self.smiles)
+        # Calculate the coordinates
+        AllChem.Compute2DCoords(m)
+        # Draw the mol
+        Draw.MolToFile(m, self.svg_file)
+        # Convert the svg to png (for high quality image)
+        cairosvg.svg2png(url=self.svg_file, write_to=self.png_file)
+        # Convert into binary and return
+        binary_image = None
+        with open(self.png_file, "rb") as f:
+            binary_image = base64.b64encode(f.read())
+            shutil.rmtree(self.temp_dir)
+
+        return binary_image
+
 
 class FeatureGenerator:
     
