@@ -92,9 +92,10 @@ class FeatureGenerator:
 
         with open(temp_file + ".csv", 'r') as f:
             for line in f.readlines():
-                if "Cmpd" in line:
+                #if "Cmpd" in line:
+                if line[1:5] == "Cmpd":
                     line = line.split(';')[5].replace('"','')
-                    features = [int(i) for i in line.split(" ")]
+                    features.append([int(i) for i in line.split(" ")])
 
         # Clean up the temporary files
         shutil.rmtree(temp_dir)
