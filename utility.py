@@ -17,6 +17,19 @@ import cairosvg
 
 MAYACHEMTOOLS_DIR = os.path.abspath("mayachemtools")
 
+def smiles_to_sdf(smiles):
+    # Try to get the rdkit mol
+    mol = Chem.MolFromSmiles(smiles)
+    # Compute 2D coordinates
+    AllChem.Compute2DCoords(mol)
+    mol.SetProp("smiles", smiles)
+    temp_dir = tempfile.mkdtemp()
+    sdf_filepath = os.path.join(temp_dir, "temp.sdf")
+    w = Chem.SDWriter(sdf_filepath)
+    w.write(mol)
+    w.flush()
+    return sdf_filepath
+
 class SmilesToImage:
     def __init__(self, smiles):
         self.smiles = smiles
@@ -49,51 +62,45 @@ class SmilesToImage:
 
 class FeatureGenerator:
     
-    def __init__(self, smiles):
+    def __init__(self):
+        self.sdf_filepath = None
+        self.smiles = None
+        
+    def load_smiles(self, smiles):
         self.smiles = smiles
-        self.temp_dir = tempfile.mkdtemp()
+        self.sdf_filepath = smiles_to_sdf(self.smiles)
     
-    def toString(self):
-        return self.smiles
+    def load_sdf(self, sdf_filepath):
+        self.sdf_filepath = sdf_filepath    
     
-    def toSDF(self):
-        # Try to get the rdkit mol
-        mol = Chem.MolFromSmiles(self.smiles)
-        #if mol == None: raise("Error in mol object") 
-        # Compute 2D coordinates
-        AllChem.Compute2DCoords(mol)
-        mol.SetProp("smiles", self.smiles)
-        #self.sdf_filepath = os.path.join(self.temp_dir, "temp.sdf")
-        w = Chem.SDWriter(os.path.join(self.temp_dir, "temp.sdf"))
-        w.write(mol)
-        w.flush()
-    
-    def toTPATF(self):
+    def extract_tpatf(self):
         features = []
         script_path = os.path.join(MAYACHEMTOOLS_DIR, "bin/TopologicalPharmacophoreAtomTripletsFingerprints.pl")
-        # Generate the sdf file
-        self.toSDF()
-        # Now generate the TPATF features
+        # Generate the TPATF features
         # Check if the sdf file exists
-        if not os.path.isfile(os.path.join(self.temp_dir, "temp.sdf")): return None
-        command = "perl " + script_path + " -r " + os.path.join(self.temp_dir, "temp") + " --AtomTripletsSetSizeToUse FixedSize -v ValuesString -o " + os.path.join(self.temp_dir, "temp.sdf")
+        if not os.path.isfile(self.sdf_filepath):
+            print("SDF file not found")
+            return None
+        
+        # Extract tpatf features
+        temp_dir = tempfile.mkdtemp()    
+        temp_file = os.path.join(temp_dir, "temp")
+        command = "perl " + script_path + " -r " + temp_file + " --AtomTripletsSetSizeToUse FixedSize -v ValuesString -o " + self.sdf_filepath
         os.system(command)
         
-        with open(os.path.join(self.temp_dir, "temp.csv"), 'r') as f:
+        with open(self.sdf_filepath + ".csv", 'r') as f:
             for line in f.readlines():
                 if "Cmpd" in line:
                     line = line.split(';')[5].replace('"','')
                     features = [int(i) for i in line.split(" ")]
 
         # Clean up the temporary files
-        self._cleanup()
+        shutil.rmtree(temp_dir)
         return features
-       
-    def _cleanup(self):
-        shutil.rmtree(self.temp_dir)
 
 
-# Example: Extracting TPATF features
-#  from utility import FeatureGenerator
-#  ft = FeatureGenerator("O=C(Cc1ccccc1)Nc2ncc(s2)C3CCC3")
-#  features = ft.toTPATF()
+if __name__=="__main__":
+    # Example: Extracting TPATF features
+     ft = FeatureGenerator()
+     ft.load_smiles("O=C(Cc1ccccc1)Nc2ncc(s2)C3CCC3")
+     features = ft.extract_tpatf()
