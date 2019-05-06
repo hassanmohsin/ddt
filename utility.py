@@ -28,6 +28,7 @@ def smiles_to_sdf(smiles):
     w = Chem.SDWriter(sdf_filepath)
     w.write(mol)
     w.flush()
+    print(sdf_filepath)
     return sdf_filepath
 
 class SmilesToImage:
@@ -87,8 +88,8 @@ class FeatureGenerator:
         temp_file = os.path.join(temp_dir, "temp")
         command = "perl " + script_path + " -r " + temp_file + " --AtomTripletsSetSizeToUse FixedSize -v ValuesString -o " + self.sdf_filepath
         os.system(command)
-        
-        with open(self.sdf_filepath + ".csv", 'r') as f:
+
+        with open(temp_file + ".csv", 'r') as f:
             for line in f.readlines():
                 if "Cmpd" in line:
                     line = line.split(';')[5].replace('"','')
@@ -100,8 +101,17 @@ class FeatureGenerator:
 
 
 if __name__=="__main__":
+    import argparse
+    parser = argparse.ArgumentParser(description="An utility script for small tasks.")
+    parser.add_argument('--smiles', action='store', dest='smiles', required=False, help='SMILES string as "SMILES"')
+    parser.add_argument('--sdf', action='store', dest='sdf', required=False, help='SDF file location')
+    parse_dict = vars(parser.parse_args())
+    
     # Example: Extracting TPATF features
-     ft = FeatureGenerator()
-     ft.load_smiles("O=C(Cc1ccccc1)Nc2ncc(s2)C3CCC3")
-     features = ft.extract_tpatf()
-     print(features)
+    ft = FeatureGenerator()
+    if parse_dict['smiles'] is not None:
+        ft.load_smiles(parse_dict['smiles'])
+    elif parse_dict['sdf'] is not None:
+        ft.load_sdf(parse_dict['sdf'])
+        features = ft.extract_tpatf()
+        print(len(features))
