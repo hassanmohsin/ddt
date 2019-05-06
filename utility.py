@@ -15,7 +15,8 @@ from rdkit.Chem.Draw import DrawingOptions
 import base64
 import cairosvg
 
-MAYACHEMTOOLS_DIR = os.path.abspath("mayachemtools")
+current_dir = os.path.dirname(os.path.realpath(__file__))
+MAYACHEMTOOLS_DIR = os.path.join(current_dir, "mayachemtools")
 
 def smiles_to_sdf(smiles):
     # Try to get the rdkit mol
