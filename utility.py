@@ -104,3 +104,4 @@ if __name__=="__main__":
      ft = FeatureGenerator()
      ft.load_smiles("O=C(Cc1ccccc1)Nc2ncc(s2)C3CCC3")
      features = ft.extract_tpatf()
+     print(features)
