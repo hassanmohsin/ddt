@@ -1,8 +1,8 @@
 # Utility script for feature generation
 # Md Mahmudulla Hassan
 # The University of Texas at El Paso
-# Last Modified: 05/05/2019
-
+# Last Modified: 05/13/2019
+from __future__ import print_function, absolute_import
 import os
 from rdkit import Chem
 from rdkit.Chem import AllChem
@@ -29,7 +29,6 @@ def smiles_to_sdf(smiles):
     w = Chem.SDWriter(sdf_filepath)
     w.write(mol)
     w.flush()
-    print(sdf_filepath)
     return sdf_filepath
 
 class SmilesToImage:
