@@ -13,7 +13,8 @@ import errno
 from rdkit.Chem import Draw
 from rdkit.Chem.Draw import DrawingOptions
 import base64
-import cairosvg
+import numpy as np
+#import cairosvg
 
 current_dir = os.path.dirname(os.path.realpath(__file__))
 MAYACHEMTOOLS_DIR = os.path.join(current_dir, "mayachemtools")
@@ -51,7 +52,7 @@ class SmilesToImage:
         # Draw the mol
         Draw.MolToFile(m, self.svg_file)
         # Convert the svg to png (for high quality image)
-        cairosvg.svg2png(url=self.svg_file, write_to=self.png_file)
+        #cairosvg.svg2png(url=self.svg_file, write_to=self.png_file)
         # Convert into binary and return
         binary_image = None
         with open(self.png_file, "rb") as f:
@@ -74,7 +75,7 @@ class FeatureGenerator:
     def load_sdf(self, sdf_filepath):
         self.sdf_filepath = sdf_filepath    
     
-    def extract_tpatf(self):
+    def extract_tpatf(self, save_csv=False):
         features = []
         script_path = os.path.join(MAYACHEMTOOLS_DIR, "bin/TopologicalPharmacophoreAtomTripletsFingerprints.pl")
         # Generate the TPATF features
@@ -86,19 +87,36 @@ class FeatureGenerator:
         # Extract tpatf features
         temp_dir = tempfile.mkdtemp()    
         temp_file = os.path.join(temp_dir, "temp")
-        command = "perl " + script_path + " -r " + temp_file + " --AtomTripletsSetSizeToUse FixedSize -v ValuesString -o " + self.sdf_filepath
+        command = "perl " + script_path + " -r " + temp_file + " --CompoundIDMode MolnameOrLabelPrefix --AtomTripletsSetSizeToUse FixedSize -v ValuesString -o " + self.sdf_filepath
+        #command = "perl " + script_path + " -r " + temp_file + "--DataFieldsMode CompoundID --CompoundIDMode MolnameOrLabelPrefix --CompoundID Cmpd --CompoundIDLabel MolID --AtomTripletsSetSizeToUse FixedSize -v ValuesString -o " + self.sdf_filepath
         os.system(command)
+        output_csv = temp_file + ".csv"
+        if not os.path.isfile(output_csv):
+            print("ERROR: TPATF features wasn't extracted")
+            return None
 
-        with open(temp_file + ".csv", 'r') as f:
-            for line in f.readlines():
-                #if "Cmpd" in line:
-                if line[1:5] == "Cmpd":
-                    line = line.split(';')[5].replace('"','')
-                    features.append([int(i) for i in line.split(" ")])
+        if save_csv: shutil.copy(output_csv, os.getcwd())
+        
+        compound_list = []
+        content = open(output_csv, 'r').readlines()
+        content = [c.replace('"', '') for c in content] # remove (") from the content
+        content = [c.split(';') for c in content] # split features from the other information
+        # Separate the compound features
+        for con in content[1:]: # First item doesn't have features
+            compound_list.append(con[0].split(',')[0])
+            features.append([int(i) for i in con[5].split(" ")])
+
+        #with open(output_csv, 'r') as f:
+        #    for line in f.readlines():
+        #        #if "Cmpd" in line:
+        #        if line[1:5] == "Cmpd":
+        #            #compound_list.append(list[1:
+        #            line = line.split(';')[5].replace('"','')
+        #            features.append([int(i) for i in line.split(" ")])
 
         # Clean up the temporary files
         shutil.rmtree(temp_dir)
-        return features
+        return compound_list, np.array(features).reshape((-1, 2692)).astype(np.float32)
 
 
 if __name__=="__main__":
@@ -106,6 +124,8 @@ if __name__=="__main__":
     parser = argparse.ArgumentParser(description="An utility script for small tasks.")
     parser.add_argument('--smiles', action='store', dest='smiles', required=False, help='SMILES string as "SMILES"')
     parser.add_argument('--sdf', action='store', dest='sdf', required=False, help='SDF file location')
+    parser.add_argument('--to', action='store', dest='to', required=False, help='Save features to .npy')
+    parser.add_argument('--csv', action='store_true', dest='csv', required=False, help='Get the features in a csv file')
     parse_dict = vars(parser.parse_args())
     
     # Example: Extracting TPATF features
@@ -114,5 +134,10 @@ if __name__=="__main__":
         ft.load_smiles(parse_dict['smiles'])
     elif parse_dict['sdf'] is not None:
         ft.load_sdf(parse_dict['sdf'])
-        features = ft.extract_tpatf()
-        print(len(features))
+        compounds, features = ft.extract_tpatf(True) if parse_dict['csv'] else ft.extract_tpatf()
+        if parse_dict['to'] is not None:
+            np.save(parse_dict['to'], features)
+            with open(parse_dict['to'] + '.txt', 'w') as f:
+              f.writelines(','.join([c for c in compounds]))
+        else:
+            print(compounds, len(features))
