@@ -87,8 +87,11 @@ class FeatureGenerator:
         # Extract tpatf features
         temp_dir = tempfile.mkdtemp()    
         temp_file = os.path.join(temp_dir, "temp")
+        # Use below command to use the compound name as compound id (selleck compounds sdf has it)
+        #command = "perl " + script_path + " -r " + temp_file + " --DataFieldsMode Specify --DataFields Name --AtomTripletsSetSizeToUse FixedSize -v ValuesString -o " + self.sdf_filepath
+        # Use below command to use the available compound id in the sdf file (most sdf files have it)
         command = "perl " + script_path + " -r " + temp_file + " --CompoundIDMode MolnameOrLabelPrefix --AtomTripletsSetSizeToUse FixedSize -v ValuesString -o " + self.sdf_filepath
-        #command = "perl " + script_path + " -r " + temp_file + "--DataFieldsMode CompoundID --CompoundIDMode MolnameOrLabelPrefix --CompoundID Cmpd --CompoundIDLabel MolID --AtomTripletsSetSizeToUse FixedSize -v ValuesString -o " + self.sdf_filepath
+        #command = "perl " + script_path + " -r " + temp_file + " --DataFieldsMode CompoundID --CompoundIDMode MolnameOrLabelPrefix --CompoundID Cmpd --CompoundIDLabel MolID --AtomTripletsSetSizeToUse FixedSize -v ValuesString -o " + self.sdf_filepath
         os.system(command)
         output_csv = temp_file + ".csv"
         if not os.path.isfile(output_csv):
@@ -98,11 +101,26 @@ class FeatureGenerator:
         if save_csv: shutil.copy(output_csv, os.getcwd())
         
         compound_list = []
-        content = open(output_csv, 'r').readlines()
+        content = []
+        
+        #TODO: Add warning with line number that fails to load because of invalid decode error
+        with open(output_csv, 'r') as f:
+            line = f.readline()
+            content.append(line)
+            while line:
+                try:
+                    line = f.readline()
+                    if line: content.append(line) # Checks emptry string
+                except:
+                    continue
+                    
         content = [c.replace('"', '') for c in content] # remove (") from the content
         content = [c.split(';') for c in content] # split features from the other information
         # Separate the compound features
         for con in content[1:]: # First item doesn't have features
+            if len(con) < 6:
+                print("Inconsistent feature entry. Ignoring {}".format(con[0].split(',')[0]))
+                continue
             compound_list.append(con[0].split(',')[0])
             features.append([int(i) for i in con[5].split(" ")])
 
