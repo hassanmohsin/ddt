@@ -198,7 +198,6 @@ class FeatureGenerator:
 
         # Separate the compound features
         for con in content[1:]:  # First item doesn't have features
-            print(f"Processing line {counter}")
             compound_list.append(con[0].split(",")[0])
             features.append([int(i) for i in con[-1].split(" ")])
 
