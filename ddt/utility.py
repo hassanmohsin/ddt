@@ -144,7 +144,7 @@ class FeatureGenerator:
             counter = counter + 1
         w.flush()
 
-        print(f"{len(mols)}/{counter} componds are converted into sdf")
+        print(f"{len(mols)}/{counter} compounds are converted into sdf")
 
     def extract_tpatf(self, csv_file=None):
         features = []
@@ -273,7 +273,6 @@ if __name__ == "__main__":
         "--csv", action="store", dest="csv", help="CSV file to write the features",
     )
     args = parser.parse_args()
-    print(args)
 
     ft = FeatureGenerator()
 
