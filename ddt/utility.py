@@ -118,7 +118,9 @@ class FeatureGenerator:
     def load_sdf(self, sdf_filepath):
         self.sdf_filepath = sdf_filepath
 
-    def load_smi_file(self, smiles_file, titleLine, smilesColumn, nameColumn, delimiter):
+    def load_smi_file(
+        self, smiles_file, titleLine, smilesColumn, nameColumn, delimiter
+    ):
         """
         smiles_file (str): file containing SMILES strings
         smilesColumn (int): index of the smiles column
@@ -185,32 +187,20 @@ class FeatureGenerator:
         content = []
 
         # TODO: Add warning with line number that fails to load because of invalid decode error
-        with open(output_csv, "r") as f:
-            line = f.readline()
-            content.append(line)
-            while line:
-                try:
-                    line = f.readline()
-                    if line:
-                        content.append(line)  # Checks emptry string
-                except:
-                    continue
+        with open(output_csv, "rb") as f:
+            for line in f:
+                content.append(line.decode("utf-8", "ignore"))
 
         content = [c.replace('"', "") for c in content]  # remove (") from the content
         content = [
             c.split(";") for c in content
         ]  # split features from the other information
+
         # Separate the compound features
         for con in content[1:]:  # First item doesn't have features
-            if len(con) < 6:
-                print(
-                    "Inconsistent feature entry. Ignoring {}".format(
-                        con[0].split(",")[0]
-                    )
-                )
-                continue
+            print(f"Processing line {counter}")
             compound_list.append(con[0].split(",")[0])
-            features.append([int(i) for i in con[5].split(" ")])
+            features.append([int(i) for i in con[-1].split(" ")])
 
         # with open(output_csv, 'r') as f:
         #    for line in f.readlines():
@@ -284,7 +274,7 @@ if __name__ == "__main__":
             titleLine=args.title,
             smilesColumn=int(args.smiles_column),
             delimiter=args.delimiter,
-            nameColumn=int(args.name_column)
+            nameColumn=int(args.name_column),
         )
     elif args.sdf:
         ft.load_sdf(args.sdf)
