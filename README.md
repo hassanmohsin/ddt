@@ -8,7 +8,9 @@ A toolkit for drug discovery research
  $ python -m ddt.utility --help
 usage: utility.py [-h]
                   (--smiles SMILES | --sdf SDF | --smiles_file SMILES_FILE)
-                  (--npy | --csv)
+                  [--title] [--smiles_column SMILES_COLUMN]
+                  [--name_column NAME_COLUMN] [--delimiter DELIMITER]
+                  (--npy NPY | --csv CSV)
 
 Feature generation from SMILES and SDF
 
@@ -18,26 +20,20 @@ optional arguments:
   --sdf SDF             SDF file location
   --smiles_file SMILES_FILE
                         SMILES file
-  --npy                 Save features to .npy
-  --csv                 Get the features in a csv file
+  --npy NPY             Numpy file for writing the features
+  --csv CSV             CSV file to write the features
+
+Argument for SMILES file parsing:
+  --title               If the file contains a header
+  --smiles_column SMILES_COLUMN
+                        Column index for SMILES entries
+  --name_column NAME_COLUMN
+                        Column index for SMILES names
+  --delimiter DELIMITER
+                        Delimiter, e.g., ' ' or ','
   ```
 
-  For a smiles file, prepare the file as below:
-  
-  ```
-  NAME,SMILES
-  levobupivacaine,CCCCN1CCCC[C@H]1C(=O)NC1=C(C)C=CC=C1C
-  (S)-nicardipine,COC(=O)C1=C(C)NC(C)=C([C@H]1C1=CC(=CC=C1)[N+]([O-])=O)C(=O)OCCN(C)CC1=CC=CC=C1
-  (S)-nitrendipine,CCOC(=O)C1=C(C)NC(C)=C([C@@H]1C1=CC(=CC=C1)[N+]([O-])=O)C(=O)OC
-  levdobutamine,C[C@@H](CCC1=CC=C(O)C=C1)NCCC1=CC=C(O)C(O)=C1
-  aminopterin,NC1=NC2=NC=C(CNC3=CC=C(C=C3)C(=O)N[C@@H](CCC(O)=O)C(O)=O)N=C2C(N)=N1
-  aminomethylbenzoic acid,NCC1=CC=C(C=C1)C(O)=O
-  phenylbutanoic acid,OC(=O)CCCC1=CC=CC=C1
-  azacitidine,NC1=NC(=O)N(C=N1)[C@@H]1O[C@H](CO)[C@@H](O)[C@H]1O
-  fluorouracil,FC1=CNC(=O)NC1=O
-  ```
-
-  This is a CSV file. First and seconds column contain the compound names and the SMILES respectively. If the compound names are not available, use dummy texts.
+Example: `python -m ddt.utility --smiles_file oo.csv --title --smiles_column 3 --name_column 1 --delimiter , --npy test`
 
 ### Script
 
